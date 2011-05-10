@@ -1,3 +1,23 @@
+import sys
+from collections import defaultdict
+
+def trueFactory():
+    return True
+
+def getPrimeSetLessThan(requiredMaxPrime):
+    primes_file = open('./primes','r')
+    primes = set()
+    maxPrime = 2
+    for prime in primes_file:
+        primes.add(int(prime))
+        maxPrime = int(prime)
+        if maxPrime > requiredMaxPrime:
+            break
+    if maxPrime < requiredMaxPrime:
+        print("ERROR: Please supply a bigger './primes' file")
+        sys.exit()
+    return primes, maxPrime
+
 def primesLessThan(n):
     """
     >>> primesLessThan(10)
@@ -5,24 +25,27 @@ def primesLessThan(n):
     >>> primesLessThan(40)
     [1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
     """
-    candidates = {}
-    for i in range(1, n):
-        candidates[i] = True
-        
+    candidates = defaultdict(trueFactory)
     candidates[1] = False
     
+    print("Caching primes up to: " + str(n))
+    print("|", end="")
+    sys.stdout.flush()
     for i in range(2, n):
-        if i % 100000 == 0:
-            print('.')
-        if not candidates[i] == False:
-            if isPrime(i):
-                # Eliminate multiples:
-                k = 2
-                while k * i < n:
-                    candidates[k*i] = False
-                    k = k + 1
+        if i % 200000 == 0:
+            print(".", end="")
+            sys.stdout.flush()
+        if i % 10000000 == 0:
+            print("|", end="")
+            sys.stdout.flush()
+        if candidates[i]:
+            multiple = 2 * i
+            while multiple < n:
+                candidates[multiple] = False
+                multiple = multiple + i
     
     #return [k for k in candidates if candidates[k] == True]
+    print("|")
     return candidates
 
 def isPrime(n):
