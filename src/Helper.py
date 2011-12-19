@@ -1,8 +1,56 @@
 import sys
+import math
 from collections import defaultdict
 
 def trueFactory():
     return True
+
+def zeroFactory():
+    return 0
+
+def getPrimeFactorMapLessThan(maxNum):
+    """
+    >>> primesLessThan(10)
+    [1, 2, 3, 5, 7]
+    >>> primesLessThan(40)
+    [1, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
+    """
+    primeFactorMap = defaultdict(zeroFactory)
+    primeFactorMap[1] = 1
+    
+    print("Building prime factor map for numbers less than " + str(maxNum))
+    sys.stdout.flush()
+    for i in range(2, maxNum):
+        if i % 200000 == 0:
+            print(".")
+            sys.stdout.flush()
+        if i % 10000000 == 0:
+            print("|")
+            sys.stdout.flush()
+        if primeFactorMap[i] == 0:
+            primeFactorMap[i] = i
+            multiple = 2 * i
+            while multiple < maxNum:
+                primeFactorMap[multiple] = i
+                multiple = multiple + i
+    
+    print("|")
+    return primeFactorMap
+
+def getPrimeFactors(num, primeFactorMap):
+    rem = num
+    primeFactors = set()
+    while rem > 0:
+        primeFactor = primeFactorMap[rem]
+        primeFactors.add(primeFactor)
+        if primeFactor == rem:
+            # The remainder is prime so we can return
+            return primeFactors
+        rem = rem / primeFactor
+
+    return primeFactors
+        
+    
 
 def getPrimeSetLessThan(requiredMaxPrime):
     primes_file = open('./primes','r')
@@ -29,14 +77,16 @@ def primesLessThan(n):
     candidates[1] = False
     
     print("Caching primes up to: " + str(n))
-    print("|", end="")
+    #print("|", end="")
     sys.stdout.flush()
     for i in range(2, n):
         if i % 200000 == 0:
-            print(".", end="")
+            #print(".", end="")
+            print(".")
             sys.stdout.flush()
         if i % 10000000 == 0:
-            print("|", end="")
+            #print("|", end="")
+            print("|")
             sys.stdout.flush()
         if candidates[i]:
             multiple = 2 * i
