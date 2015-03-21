@@ -1,4 +1,4 @@
-import Solutions.Problem75
+import Solutions.Problem79
 
 main :: IO ()
 main = run

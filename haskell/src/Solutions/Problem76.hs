@@ -24,9 +24,6 @@ run = print $ solution target
 
 data Value = Value { x :: Int, count :: Int, ways :: Map.Map Int Int } deriving (Show, Eq)
 
-getWays :: Value -> Map.Map Int Int
-getWays = ways
-
 emptyValue :: Value
 emptyValue = Value { x = 1, count = 0, ways = Map.empty }
 
