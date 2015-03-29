@@ -1,4 +1,4 @@
-module Solutions.Problem81 where
+module Solutions.Problem82 where
 {-
 https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 USAGE: $ cat data/p081_matrix.txt | cabal run
@@ -11,15 +11,18 @@ import qualified Data.List as L
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+data Node = Node Int Int deriving (Eq, Ord, Show)
+data Matrix a = Matrix (M.Map Node a) deriving Show
+data Cost = Cost Int | Unknown deriving (Eq, Ord, Show)
+data State = State { size :: Int, values :: Matrix Int, costs :: Matrix Cost, visited :: S.Set Node } deriving Show
+
 run :: IO ()
 run = do
     contents <- getContents  
     let vals = makeMatrix contents
     let sz = 80
-    let state = State { size = sz, values = vals, costs = (initialCosts vals), visited = S.empty }
-    let targetNode = Node (sz - 1) (sz - 1)
-    let finalState = findPath state targetNode
-    print $ getCost (costs finalState) targetNode
+    let startNodes = map (\x -> Node x 0) [0..(sz-1)]
+    mapM_ (findPath sz vals) startNodes
 
 makeMatrix :: String -> Matrix Int
 makeMatrix input = let rows = zip [0..] $ lines input
@@ -31,16 +34,19 @@ makeMatrix input = let rows = zip [0..] $ lines input
                                          in map (\(y,v) -> (Node x y, v)) cols
                    in Matrix $ M.fromList $ concat $ map toNodes rows
                        
+findPath :: Int -> Matrix Int -> Node -> IO ()
+findPath sz vals start = do
+    let targets = map (\x -> Node x (sz-1)) [0..(sz-1)]
+    let startState = State { size = sz, values = vals, costs = (initialCosts start vals), visited = S.empty }
+    let state = findPath' startState targets
+    let cost = minimum $ map (getCost (costs state)) targets
+    print $ "Start node: " ++ (show start) ++ " produced path with cost: " ++ (show cost)
 
-data Node = Node Int Int deriving (Eq, Ord, Show)
-data Matrix a = Matrix (M.Map Node a) deriving Show
-data Cost = Cost Int | Unknown deriving (Eq, Ord, Show)
-data State = State { size :: Int, values :: Matrix Int, costs :: Matrix Cost, visited :: S.Set Node } deriving Show
 
-findPath :: State -> Node -> State
-findPath s@(State { visited = vs }) target
-    | (S.member target vs) = s
-    | otherwise = findPath (step s) target
+findPath' :: State -> [Node] -> State
+findPath' s@(State { visited = vs }) targets
+    | any (\n -> S.member n vs) targets = s
+    | otherwise = findPath' (step s) targets
 
 step :: State -> State
 step (State { size = s, values = vs, costs = cs, visited = vsted }) =
@@ -51,11 +57,8 @@ step (State { size = s, values = vs, costs = cs, visited = vsted }) =
         newVisited = S.insert node vsted
     in State { size = s, values = vs, costs = newCosts, visited = newVisited }
 
-initialState :: State
-initialState = State { size = 5, values = example, costs = initialCosts example, visited = S.empty }
-
-initialCosts :: Matrix Int -> Matrix Cost
-initialCosts vals = Matrix $ M.fromList [(Node 0 0, Cost (getValue vals (Node 0 0)))]
+initialCosts :: Node -> Matrix Int -> Matrix Cost
+initialCosts start vals = Matrix $ M.fromList [(start, Cost (getValue vals start))]
 
 example :: Matrix Int
 example = let row x columns = L.map (Node x) [0..columns]
@@ -77,8 +80,8 @@ addCost (Matrix cs) n c = Matrix $ M.insert n c cs
 
 neighbours :: Int -> Node -> [Node]
 neighbours size' (Node x y) =
-    let n = [Node x (y+1), Node (x+1) y]
-    in filter (\(Node a b) -> a < size' && b < size') n
+    let n = [Node (x+1) y, Node (x-1) y, Node x (y+1)]
+    in filter (\(Node a b) -> 0 <= a && a < size' && 0 <= b && b < size') n
 
 updateNeighbours :: Matrix Int -> Matrix Cost -> Cost -> [Node] -> Matrix Cost
 updateNeighbours _ _ Unknown _ = error "Ancestor cost can't be unknown"

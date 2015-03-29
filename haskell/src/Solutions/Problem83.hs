@@ -1,4 +1,4 @@
-module Solutions.Problem81 where
+module Solutions.Problem83 where
 {-
 https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 USAGE: $ cat data/p081_matrix.txt | cabal run
@@ -77,8 +77,8 @@ addCost (Matrix cs) n c = Matrix $ M.insert n c cs
 
 neighbours :: Int -> Node -> [Node]
 neighbours size' (Node x y) =
-    let n = [Node x (y+1), Node (x+1) y]
-    in filter (\(Node a b) -> a < size' && b < size') n
+    let n = [Node x (y+1), Node (x+1) y, Node x (y-1), Node (x-1) y]
+    in filter (\(Node a b) -> 0 <= a && a < size' && 0 <= b && b < size') n
 
 updateNeighbours :: Matrix Int -> Matrix Cost -> Cost -> [Node] -> Matrix Cost
 updateNeighbours _ _ Unknown _ = error "Ancestor cost can't be unknown"
